@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  rag-server:
+    build:
+      context: ./RAG
+      dockerfile: Dockerfile
+    container_name: RAG
+    ports:
+      - "7777:7777"
+    volumes:
+      - chroma_data:/app/chroma_data
+    networks:
+      - rag-project
+
+  backend:
+    build:
+      context: ./BE
+      dockerfile: Dockerfile
+    container_name: BE
+    ports:
+      - "8000:8000"
+    networks:
+      - rag-project
+
+networks:
+  rag-network:
+    external: true
+
+volumes:
+  chroma_data:
