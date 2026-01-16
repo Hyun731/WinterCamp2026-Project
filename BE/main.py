@@ -151,8 +151,6 @@ def history(request: Request):
 
     return result
 
-#퀴리 보는거 유지 보수
-
 # if __name__ == "__main__":
 #     import uvicorn
 #     uvicorn.run(app, host="0.0.0.0", port=8000)
