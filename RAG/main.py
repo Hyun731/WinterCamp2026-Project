@@ -1,5 +1,5 @@
 import os
-import google.generativeai as genai
+from google import genai
 from fastapi import FastAPI
 import chromadb
 from chromadb.utils import embedding_functions
@@ -19,8 +19,8 @@ api_key = os.environ.get("API")
 if not api_key:
     raise ValueError("API 환경 변수가 설정되지 않았습니다.")
 
-genai.configure(api_key=api_key)
-model = genai.GenerativeModel('gemini-1.5-flash')
+client_gemini = genai.Client(api_key=api_key)
+model_id = "gemini-2.5-flash"
 
 @app.post("/answer")
 def answer(query: str, results_num: int = 4):
@@ -54,7 +54,10 @@ def answer(query: str, results_num: int = 4):
     Final Response (in Korean):'''
 
     try:
-        response = model.generate_content(prompt)
+        response = client_gemini.models.generate_content(
+            model=model_id,
+            contents=prompt
+        )
 
         return {
             "answer": response.text,
