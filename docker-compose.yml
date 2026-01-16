@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  rag-server:
+  rag-project:
     build:
       context: ./RAG
       dockerfile: Dockerfile
@@ -24,7 +24,7 @@ services:
       - rag-project
 
 networks:
-  rag-network:
+  rag-project:
     external: true
 
 volumes:
