@@ -20,40 +20,43 @@ if not api_key:
     raise ValueError("API 환경 변수가 설정되지 않았습니다.")
 
 client_gemini = genai.Client(api_key=api_key)
-model_id = "gemini-2.5-flash"
+model_id = "gemini-3-flash"
 
 @app.post("/answer")
-def answer(query: str, results_num: int = 4):
-    law_results = law_col.query(query_texts=query, n_results=results_num)
-    law_context = "\n".join(law_results['documents'][0])
-
-    results = precedent_col.query(query_texts=query, n_results=results_num)
-    context = "\n".join(results['documents'][0])
-
-    combined_context = f"관련 법령\n{law_context}\n\n참고 판례\n{context}"
-
-    prompt = f'''System: You are a professional legal expert in South Korean law. 
-    Analyze the provided [Legal Information] and provide a comprehensive response to the user's question.
-    
-    [Instructions]:
-    1. Output Language: Korean. All explanations must be written in clear and professional Korean.
-    2. Base your answer strictly on the provided [Legal Information]. If the information is insufficient, state that "관련 근거를 찾을 수 없습니다."
-    3. Cite specific Statutes and Articles (e.g., "민법 제544조").
-    4. Include details from Court Precedents (e.g., "대법원 판결" or "고등법원 판례") to support your reasoning.
-    5. Structure your response logically: 
-       - Summary of the legal situation
-       - Applicable laws and analysis of precedents
-       - Final conclusion and advice
-    6. Explain technical legal terms in a way that is easy for a layperson to understand.
-    
-    [Legal Information (Context)]:
-    {combined_context}
-    
-    [User Question]: {query}
-    
-    Final Response (in Korean):'''
-
+def answer(query: str, results_num: int = 15):
     try:
+        extract_prompt = f"다음 질문에서 법률 검색을 위한 핵심 키워드(단어)만 3~4개 뽑아줘: '{query}'"
+        keywords_resp = client_gemini.models.generate_content(
+            model=model_id,
+            contents=extract_prompt
+        )
+        refined_query = keywords_resp.text.strip()
+
+        law_results = law_col.query(query_texts=refined_query, n_results=results_num)
+        law_context = "\n".join(law_results['documents'][0])
+
+        precedent_results = precedent_col.query(query_texts=refined_query, n_results=results_num)
+        context = "\n".join(precedent_results['documents'][0])
+
+        combined_context = f"관련 법령\n{law_context}\n\n참고 판례\n{context}"
+
+        prompt = f'''System: You are a professional legal expert in South Korean law. 
+        Analyze the provided [Legal Information] and provide a comprehensive response to the user's question.
+        
+        [Instructions]:
+        1. Output Language: Korean. All explanations must be written in clear and professional Korean.
+        2. Base your answer on the provided [Legal Information]. 만약 정보가 다소 부족하더라도 법령의 일반 원칙에 비추어 논리적으로 설명하세요. 정말 관련이 없는 경우에만 "관련 근거를 찾을 수 없습니다"라고 답하세요.
+        3. Cite specific Statutes and Articles (e.g., "민법 제544조").
+        4. Include details from Court Precedents to support your reasoning.
+        5. Structure: 상황 요약 -> 관련 법령/판례 분석 -> 최종 결론 및 조언.
+        
+        [Legal Information (Context)]:
+        {combined_context}
+        
+        [User Question]: {query}
+        
+        Final Response (in Korean):'''
+
         response = client_gemini.models.generate_content(
             model=model_id,
             contents=prompt
@@ -62,7 +65,9 @@ def answer(query: str, results_num: int = 4):
         return {
             "answer": response.text,
             "source_laws": law_results['metadatas'][0],
-            "source_precedents": results['metadatas'][0]
+            "source_precedents": precedent_results['metadatas'][0],
+            "refined_query": refined_query
         }
+
     except Exception as e:
         return {"error": str(e)}
