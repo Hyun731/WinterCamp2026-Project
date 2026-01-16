@@ -12,6 +12,15 @@ services:
       - chroma_data:/app/chroma_data
     networks:
       - rag-project
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
+    env_file:
+      - ./RAG/.env
 
   backend:
     build:

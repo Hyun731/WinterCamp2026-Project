@@ -16,7 +16,7 @@ from config import GEMINI_API_KEY as gemini_api_key
 app = FastAPI()
 
 # RAG 서버 URL
-RAG_SERVER_URL = os.getenv("RAG_SERVER_URL", "http://rag_project:7777")
+RAG_SERVER_URL = os.getenv("RAG_SERVER_URL", "http://rag-project:7777")
 
 #동언이 gemini_key
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", gemini_api_key)
