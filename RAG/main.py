@@ -32,7 +32,6 @@ def answer(query: str, results_num: int = 4):
 
     combined_context = f"관련 법령\n{law_context}\n\n참고 판례\n{context}"
 
-    # 3. 프롬프트 구성
     prompt = f'''System: You are a professional legal expert in South Korean law. 
     Analyze the provided [Legal Information] and provide a comprehensive response to the user's question.
     
