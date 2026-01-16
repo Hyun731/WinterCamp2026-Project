@@ -1,0 +1,12 @@
+# 데이터베이스 폴더 제외
+DB/
+
+# 환경 변수 파일 제외
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# (선택 사항) API 키나 서비스 계정 키 파일이 있다면 추가로 제외
+*.json
